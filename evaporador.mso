@@ -1,0 +1,149 @@
+using "types";
+
+#*----------------------------------------------------------------------------------*
+* Modelo de uma corrente de agua liquida saturada
+* As equacoes para P e h foram obtidas do ajuste dos dados da Tab. A.2-9, p. 962,
+* de Geankoplis (2003) a polinomios de grau 4 com R^2 = 1
+*----------------------------------------------------------------------------------*#
+
+Model corrente_liquido
+	VARIABLES
+	Vazao	as flow_mass(Brief="Vazao massica");
+	Frac	as fraction (Brief="Fracao massica");
+	T		as Real 	(Brief="Temperatura em Celsius", Default=30);
+	P		as pressure (Brief="Pressao", DisplayUnit='kPa');
+	h		as enth_mass(Brief="Entalpia em base massica"); 
+	
+	EQUATIONS	
+	"Pressao"
+	P = (1.42836e-6*T^4 - 1.53705e-4*T^3 + 1.38160e-2*T^2 - 0.28306*T + 2.58815) * 'kPa';
+	
+	"Entalpia do liquido"
+	h = (1.77775e-8*T^4 - 3.25684e-6*T^3 + 4.30706e-4*T^2 + 4.16019*T + 0.42979) * 'kJ/kg';
+end
+
+
+#*----------------------------------------------------------------------------------*
+* Modelo de uma corrente de vapor d'agua saturado
+* As equacoes para P, H e lambda foram obtidas do ajuste dos dados da Tab. A.2-9, 
+* p. 962, de Geankoplis (2003) a polinomios de grau 4 com R^2 = 1
+*----------------------------------------------------------------------------------*#
+
+Model corrente_vapor
+	VARIABLES
+	Vazao	as flow_mass(Brief="Vazao massica");
+	T		as Real 	(Brief="Temperatura em Celsius", Default=100);
+	P		as pressure (Brief="Pressao", DisplayUnit='kPa'); 
+	H		as enth_mass(Brief="Entalpia em base massica"); 
+	lambda	as enth_mass(Brief="Calor latente em base massica");
+	
+	EQUATIONS	
+	"Pressao"
+	P = (1.42836e-6*T^4 - 1.53705e-4*T^3 + 1.38160e-2*T^2 - 0.28306*T + 2.58815) * 'kPa';
+	
+	"Entalpia do vapor"
+	H = (-3.25364e-8*T^4 + 2.17296e-6*T^3 - 1.24241e-3*T^2 + 1.88398*T + 2501.00345) * 'kJ/kg';
+	
+	"Calor latente"
+	lambda = (-5.03139e-8*T^4 + 5.42980e-6*T^3 - 1.67311e-3*T^2 - 2.27621*T + 2500.57366) * 'kJ/kg';
+end
+
+
+#*----------------------------------------------------------------------------------*
+* Modelo de um evaporador 
+*----------------------------------------------------------------------------------*#
+
+Model evaporador
+	VARIABLES
+in	Aliment		as corrente_liquido; 	# Alimentacao
+in	Vap_aquec	as corrente_vapor;		# Vapor de aquecimento
+out	Liq_conc	as corrente_liquido;	# Liquido concentrado
+out	Vap_prod	as corrente_vapor;		# Vapor produzido
+out	Liq_cond	as corrente_liquido;	# Liquido condensado
+
+	q	as heat_rate 		(Brief="Taxa de transf. de calor");
+	A	as area 			(Brief="Area de transf. de calor", Default=10);
+	U	as heat_trans_coeff (Brief="Coef. global de transf. de calor", DisplayUnit='W/m^2/K');
+
+	EQUATIONS
+	"Balanco de massa global"
+	Aliment.Vazao = Vap_prod.Vazao + Liq_conc.Vazao;
+	
+	"Vazao de vapor de aquecimento"
+	Vap_aquec.Vazao = Liq_cond.Vazao;
+	
+	"Sem soluto no liquido condensado"
+	Liq_cond.Frac = 0;
+	
+	"Equilibrio termico no evaporador"
+	Vap_aquec.T = Liq_cond.T;
+	
+	"Balanco de massa para soluto"
+	Aliment.Vazao * Aliment.Frac = 
+		Liq_conc.Vazao * Liq_conc.Frac;
+	
+	"Balanco de energia"
+	Aliment.Vazao * Aliment.h + Vap_aquec.Vazao * Vap_aquec.lambda = 
+		Vap_prod.Vazao * Vap_prod.H + Liq_conc.Vazao * Liq_conc.h;
+	
+	"Equilibrio termico entre vapor produzido e liquido concentrado"
+	Vap_prod.T = Liq_conc.T;
+	
+	"Quantidade de calor transferido"
+	q = Vap_aquec.Vazao * Vap_aquec.lambda;
+	
+	"Capacidade termica do evaporador"
+	q = U * A * (Vap_aquec.T - Vap_prod.T) * 'K';
+end
+
+
+#*----------------------------------------------------------------------------------*
+* Exemplo 8.5-1, p. 544, de Geankoplis (2003)
+* (Evaporation of sugar solution in a triple-effect evaporator)
+*
+* A implementacao desconsidera os efeitos da EPE e do calor de solucao, isto eh,
+* as correntes sao consideradas com as propriedades da agua pura
+*----------------------------------------------------------------------------------*#
+
+FlowSheet exemplo	
+	DEVICES
+	Solucao1	as corrente_liquido;	# Solucao diluida alimentada no Efeito 1
+	Vapor1		as corrente_vapor;		# Vapor de aquecimento no Efeito 1
+	Efeito1		as evaporador;
+	Efeito2		as evaporador;
+	Efeito3		as evaporador;
+	
+	CONNECTIONS
+	Solucao1	to Efeito1.Aliment;
+	Vapor1		to Efeito1.Vap_aquec;
+	
+	Efeito1.Liq_conc	to Efeito2.Aliment;
+	Efeito1.Vap_prod	to Efeito2.Vap_aquec;
+	
+	Efeito2.Liq_conc	to Efeito3.Aliment;
+	Efeito2.Vap_prod	to Efeito3.Vap_aquec;
+	
+	SPECIFY
+	Solucao1.Vazao = 22680 * 'kg/h';
+	Solucao1.Frac = 0.1;
+	Solucao1.T = 26.7; # Celsius
+	
+	Vapor1.P = 205.5 * 'kPa';
+	
+	Efeito3.Vap_prod.P = 13.4 * 'kPa';
+	Efeito3.Liq_conc.Frac = 0.5;
+	
+	Efeito1.U = 3123 * 'W/m^2/K';
+	Efeito2.U = 1987 * 'W/m^2/K';
+	Efeito3.U = 1136 * 'W/m^2/K';
+	
+	EQUATIONS
+	"Area do efeito 2"
+	Efeito1.A = Efeito2.A;
+	
+	"Area do efeito 3"
+	Efeito2.A = Efeito3.A;
+	
+	OPTIONS
+	Dynamic = false;
+end

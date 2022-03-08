@@ -1,0 +1,78 @@
+using "types";
+
+#*----------------------------------------------------------------------------------*
+* Modelo de um trocador de calor
+* Considera somente balancos de energia para os fluidos quente e frio
+*----------------------------------------------------------------------------------*#
+
+Model trocador_de_calor	
+	VARIABLES
+	q		as heat_rate 	(Brief="Taxa de transf. de calor");
+	
+	# Fluido quente
+	mq		as flow_mass 	(Brief="Vazao massica do fluido quente");
+	cpq		as cp_mass		(Brief="Calor especifico do fluido quente");
+	Tqent	as temperature	(Brief="Temperatura de entrada do fluido quente");
+	Tqsai	as temperature	(Brief="Temperatura de saida do fluido quente");
+	
+	# Fluido frio
+	mf		as flow_mass 	(Brief="Vazao massica do fluido frio");
+	cpf		as cp_mass		(Brief="Calor especifico do fluido frio");
+	Tfent	as temperature	(Brief="Temperatura de entrada do fluido frio");
+	Tfsai	as temperature	(Brief="Temperatura de saida do fluido frio");	
+	
+	EQUATIONS
+	"Balanco de energia para o fluido quente"
+	q = mq * cpq * (Tqent - Tqsai);
+	
+	"Balanco de energia para o fluido frio"
+	q = mf * cpf * (Tfsai - Tfent);
+end
+
+#*----------------------------------------------------------------------------------*
+* Exemplo 1, p. 345, do Capitulo 22 de Welty; Rorrer; Foster (2017)
+*
+* Dados: mq, cpq, Tqent, Tqsai, mf, cpf, Tfent
+* Calcular: q, Tfsai
+*----------------------------------------------------------------------------------*#
+
+FlowSheet exemplo_1 as trocador_de_calor
+	SPECIFY
+	# Oleo lubrificante leve (fluido quente)
+	mq = 0.5 * 'kg/s';
+	cpq	= 2090 * 'J/(kg*K)';
+	Tqent = 375 * 'K';
+	Tqsai = 350 * 'K';
+	
+	# Agua de resfriamento (fluido frio)
+	mf = 0.201 * 'kg/s';
+	cpf	= 4177 * 'J/(kg*K)';
+	Tfent = 280 * 'K';
+	
+	OPTIONS
+	Dynamic = false;
+end
+
+#*----------------------------------------------------------------------------------*
+* Exemplo 11.1, p. 457, do Capitulo 11 de Bergman; Lavine; Incropera; Dewitt (2015)
+*
+* Dados: mq, cpq, Tqent, Tqsai, mf, cpf, Tfent
+* Calcular: q, Tfsai
+*----------------------------------------------------------------------------------*#
+
+FlowSheet exemplo_2 as trocador_de_calor
+	SPECIFY
+	# Oleo lubrificante (fluido quente)
+	mq = 0.1 * 'kg/s';
+	cpq	= 2131 * 'J/(kg*K)';
+	Tqent = (100 + 273.15) * 'K';
+	Tqsai = (60 + 273.15) * 'K';
+	
+	# Agua de resfriamento (fluido frio)
+	mf = 0.2 * 'kg/s';
+	cpf	= 4178 * 'J/(kg*K)';
+	Tfent = (30 + 273.15) * 'K';	
+	
+	OPTIONS
+	Dynamic = false;
+end
