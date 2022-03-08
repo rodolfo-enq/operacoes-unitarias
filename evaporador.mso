@@ -8,11 +8,11 @@ using "types";
 
 Model corrente_liquido
 	VARIABLES
-	Vazao	as flow_mass(Brief="Vazao massica");
-	Frac	as fraction (Brief="Fracao massica");
+	Vazao		as flow_mass	(Brief="Vazao massica");
+	Frac		as fraction	(Brief="Fracao massica");
 	T		as Real 	(Brief="Temperatura em Celsius", Default=30);
-	P		as pressure (Brief="Pressao", DisplayUnit='kPa');
-	h		as enth_mass(Brief="Entalpia em base massica"); 
+	P		as pressure	(Brief="Pressao", DisplayUnit='kPa');
+	h		as enth_mass	(Brief="Entalpia em base massica"); 
 	
 	EQUATIONS	
 	"Pressao"
@@ -31,11 +31,11 @@ end
 
 Model corrente_vapor
 	VARIABLES
-	Vazao	as flow_mass(Brief="Vazao massica");
+	Vazao		as flow_mass	(Brief="Vazao massica");
 	T		as Real 	(Brief="Temperatura em Celsius", Default=100);
-	P		as pressure (Brief="Pressao", DisplayUnit='kPa'); 
-	H		as enth_mass(Brief="Entalpia em base massica"); 
-	lambda	as enth_mass(Brief="Calor latente em base massica");
+	P		as pressure 	(Brief="Pressao", DisplayUnit='kPa'); 
+	H		as enth_mass	(Brief="Entalpia em base massica"); 
+	lambda		as enth_mass	(Brief="Calor latente em base massica");
 	
 	EQUATIONS	
 	"Pressao"
@@ -56,14 +56,14 @@ end
 Model evaporador
 	VARIABLES
 in	Aliment		as corrente_liquido; 	# Alimentacao
-in	Vap_aquec	as corrente_vapor;		# Vapor de aquecimento
+in	Vap_aquec	as corrente_vapor;	# Vapor de aquecimento
 out	Liq_conc	as corrente_liquido;	# Liquido concentrado
-out	Vap_prod	as corrente_vapor;		# Vapor produzido
+out	Vap_prod	as corrente_vapor;	# Vapor produzido
 out	Liq_cond	as corrente_liquido;	# Liquido condensado
 
-	q	as heat_rate 		(Brief="Taxa de transf. de calor");
-	A	as area 			(Brief="Area de transf. de calor", Default=10);
-	U	as heat_trans_coeff (Brief="Coef. global de transf. de calor", DisplayUnit='W/m^2/K');
+	q		as heat_rate 		(Brief="Taxa de transf. de calor");
+	A		as area 		(Brief="Area de transf. de calor", Default=10);
+	U		as heat_trans_coeff	(Brief="Coef. global de transf. de calor", DisplayUnit='W/m^2/K');
 
 	EQUATIONS
 	"Balanco de massa global"
@@ -79,12 +79,10 @@ out	Liq_cond	as corrente_liquido;	# Liquido condensado
 	Vap_aquec.T = Liq_cond.T;
 	
 	"Balanco de massa para soluto"
-	Aliment.Vazao * Aliment.Frac = 
-		Liq_conc.Vazao * Liq_conc.Frac;
+	Aliment.Vazao * Aliment.Frac = Liq_conc.Vazao * Liq_conc.Frac;
 	
 	"Balanco de energia"
-	Aliment.Vazao * Aliment.h + Vap_aquec.Vazao * Vap_aquec.lambda = 
-		Vap_prod.Vazao * Vap_prod.H + Liq_conc.Vazao * Liq_conc.h;
+	Aliment.Vazao * Aliment.h + Vap_aquec.Vazao * Vap_aquec.lambda = Vap_prod.Vazao * Vap_prod.H + Liq_conc.Vazao * Liq_conc.h;
 	
 	"Equilibrio termico entre vapor produzido e liquido concentrado"
 	Vap_prod.T = Liq_conc.T;
@@ -108,7 +106,7 @@ end
 FlowSheet exemplo	
 	DEVICES
 	Solucao1	as corrente_liquido;	# Solucao diluida alimentada no Efeito 1
-	Vapor1		as corrente_vapor;		# Vapor de aquecimento no Efeito 1
+	Vapor1		as corrente_vapor;	# Vapor de aquecimento no Efeito 1
 	Efeito1		as evaporador;
 	Efeito2		as evaporador;
 	Efeito3		as evaporador;
