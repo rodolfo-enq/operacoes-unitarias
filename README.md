@@ -1,2 +1,2 @@
-# unit-operations
-Didactic application codes for unit operations of Chemical Engineering
+# Códigos para Operações Unitárias
+Códigos para aplicações em Operações Unitárias da Engenharia Química
