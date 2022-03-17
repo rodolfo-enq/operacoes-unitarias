@@ -54,7 +54,7 @@ FlowSheet exemplo_1 as trocador_de_calor
 end
 
 #*----------------------------------------------------------------------------------*
-* Exemplo 11.1, p. 457, do Capitulo 11 de Bergman; Lavine; Incropera; Dewitt (2015)
+* Exemplo 11.1, Capitulo 11, de Bergman; Lavine (2019)
 *
 * Dados: mq, cpq, Tqent, Tqsai, mf, cpf, Tfent
 * Calcular: q, Tfsai
